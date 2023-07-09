@@ -42,23 +42,13 @@ chrome.browserAction.onClicked.addListener(function(tab) {
       copiedText += "| Task | File |\n";
       copiedText += "| ---- | ---- |\n";
       files.forEach(function(pair) {
-        copiedText += "| " + pair.task + " | " + pair.file + " |\n";
+        copiedText += "| " + pair.task + " | [" + pair.file.substring(6) + "](./"+ pair.file.substring(6) +") |\n";
       });
   
-      copyToClipboard(copiedText);
       saveToFile(copiedText);
     });
   });
 
-  function copyToClipboard(text) {
-    var textArea = document.createElement("textarea");
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textArea);
-  }
-  
   function saveToFile(text) {
     var blob = new Blob([text], { type: 'text/plain' });
     var fileName = 'README.md';
