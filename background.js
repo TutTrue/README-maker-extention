@@ -1,4 +1,5 @@
 chrome.browserAction.onClicked.addListener(function(tab) {
+  if (tab.url.startsWith('https://intranet.alxswe.com/projects/')){
   chrome.tabs.executeScript(tab.id, {
     code: `
       var projectName = document.title.split(" | ")[0];
@@ -67,7 +68,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
       });
       copiedText += "</ul>\n\n";
     });
-
+	copiedText += "<h2>Tasks</h2>\n\n";
     copiedText += "| Task | File |\n";
     copiedText += "| ---- | ---- |\n";
     files.forEach(function(pair) {
@@ -76,6 +77,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
     saveToFile(copiedText);
   });
+  }
 });
 
 function saveToFile(text) {
