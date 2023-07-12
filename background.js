@@ -6,6 +6,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
       var tasks = [];
       var files = [];
       var learningObjectives = [];
+      var resources = [];
 
       var mandatoryElements = document.querySelectorAll('span.label.label-info');
       mandatoryElements.forEach(function(element) {
@@ -51,24 +52,40 @@ chrome.browserAction.onClicked.addListener(function(tab) {
         learningObjectives.push({ category: 'General', objectives: objectives });
       }
 
-      [projectName, files, learningObjectives];
+      var panelBody = document.querySelector(".panel-body");
+      var sectionList = panelBody.querySelector("ul");
+      var listItems = sectionList.querySelectorAll("li");
+
+      listItems.forEach(function(item) {
+        var link = item.querySelector("a");
+        var url = link.href;
+        var title = link.title;
+
+        resources.push({ resource: title, link: url });
+      });
+
+      [projectName, files, learningObjectives, resources];
     `
   }, function(results) {
     var projectName = results[0][0];
     var files = results[0][1];
     var learningObjectives = results[0][2];
+    var resources = results[0][3];
 
     var copiedText = "# " + projectName + "\n\n";
-    copiedText += "<h2>Learning Objectives</h2>\n\n";
-    learningObjectives.forEach(function(obj) {
-      copiedText += "<h3>" + obj.category + "</h3>\n\n";
-      copiedText += "<ul>\n";
-      obj.objectives.forEach(function(objective) {
-        copiedText += "<li>" + objective + "</li>\n";
-      });
-      copiedText += "</ul>\n\n";
+    copiedText += "## Resources\n\n";
+    copiedText += "#### Read or watch:\n\n";
+    resources.forEach(function(obj){
+      copiedText += "* [" + obj.resource + "](./" + obj.link + ")\n";
     });
-	copiedText += "<h2>Tasks</h2>\n\n";
+    copiedText += "## Learning Objectives\n\n";
+    learningObjectives.forEach(function(obj) {
+      copiedText += "### " + obj.category + "\n\n";
+      obj.objectives.forEach(function(objective) {
+        copiedText += "* " + objective + "\n";
+      });
+    });
+	copiedText += "## Tasks\n\n";
     copiedText += "| Task | File |\n";
     copiedText += "| ---- | ---- |\n";
     files.forEach(function(pair) {
