@@ -58,8 +58,8 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
       listItems.forEach(function(item) {
         var link = item.querySelector("a");
-        var url = link.href;
-        var title = link.title;
+        var url = link && link.href ? link.href : "";
+        var title = link && link.title ? link.title : "";
 
         resources.push({ resource: title, link: url });
       });
@@ -76,7 +76,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     copiedText += "## Resources\n\n";
     copiedText += "#### Read or watch:\n\n";
     resources.forEach(function(obj){
-      copiedText += "* [" + obj.resource + "](./" + obj.link + ")\n";
+      copiedText += "* [" + obj.resource + "](" + obj.link + ")\n";
     });
     copiedText += "## Learning Objectives\n\n";
     learningObjectives.forEach(function(obj) {
