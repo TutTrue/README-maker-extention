@@ -8,32 +8,50 @@ chrome.browserAction.onClicked.addListener(function(tab) {
       var learningObjectives = [];
       var resources = [];
 
-      var mandatoryElements = document.querySelectorAll('span.label.label-info');
-      mandatoryElements.forEach(function(element) {
-        if (element.textContent.trim() === 'mandatory') {
-          var taskElement = element.closest('.panel-heading.panel-heading-actions').querySelector('h3.panel-title');
-          tasks.push(taskElement.textContent.trim());
-        }
+      // var mandatoryElements = document.querySelectorAll('span.label.label-info');
+      // mandatoryElements.forEach(function(element) {
+      //   if (element.textContent.trim() === 'mandatory') {
+      //     var taskElement = element.closest('.panel-heading.panel-heading-actions').querySelector('h3.panel-title');
+      //     tasks.push(taskElement.textContent.trim());
+      //   }
+      // });
+
+      // var advancedElements = document.querySelectorAll('span.label.label-info');
+      // advancedElements.forEach(function(element) {
+      //   if (element.textContent.trim() === '#advanced') {
+      //     var taskElement = element.closest('.panel-heading.panel-heading-actions').querySelector('h3.panel-title');
+      //     tasks.push(taskElement.textContent.trim());
+      //   }
+      // });
+      
+      const taskElements = document.querySelectorAll('div[id^="task-num"]')
+      taskElements.forEach(taskDiv => {
+        const title = taskDiv.querySelector('h3.panel-title')?.outerText;
+        const task_type = taskDiv.querySelector('span.label.label-info')?.outerText;
+
+        const files = taskDiv.querySelector('div.list-group-item ul li:nth-child(3) code')?.outerText;
+        files_array = files?.split(", ");
+        //TODO split file
+        
+        
+        tasks.push({
+          title: title,
+          task_type: task_type,
+          files: files_array
+        });
+        console.log(tasks);
       });
 
-      var advancedElements = document.querySelectorAll('span.label.label-info');
-      advancedElements.forEach(function(element) {
-        if (element.textContent.trim() === '#advanced') {
-          var taskElement = element.closest('.panel-heading.panel-heading-actions').querySelector('h3.panel-title');
-          tasks.push(taskElement.textContent.trim());
-        }
-      });
-
-      var fileElements = document.querySelectorAll('.list-group-item ul li:nth-child(3)');
-      fileElements.forEach(function(element, index) {
-        var file = element.textContent.trim();
-        if (index < tasks.length) {
-          var task = tasks[index];
-          files.push({ task: task, file: file });
-        } else {
-          files.push({ task: '', file: file });
-        }
-      });
+      // var fileElements = document.querySelectorAll('.list-group-item ul li:nth-child(3)');
+      // fileElements.forEach(function(element, index) {
+      //   var file = element.textContent.trim();
+      //   if (index < tasks.length) {
+      //     var task = tasks[index];
+      //     files.push({ task: task, file: file });
+      //   } else {
+      //     files.push({ task: '', file: file });
+      //   }
+      // });
 
       var learningObjectiveElements = document.querySelectorAll('h3');
       var generalHeadingIndex = -1;
@@ -52,23 +70,23 @@ chrome.browserAction.onClicked.addListener(function(tab) {
         learningObjectives.push({ category: 'General', objectives: objectives });
       }
 
-      var panelBody = document.querySelector(".panel-body");
-      var sectionList = panelBody.querySelector("ul");
-      var listItems = sectionList.querySelectorAll("li");
+      // var panelBody = document.querySelector(".panel-body");
+      // var sectionList = panelBody.querySelector("ul");
+      // var listItems = sectionList.querySelectorAll("li");
 
-      listItems.forEach(function(item) {
-        var link = item.querySelector("a");
-        var url = link && link.href ? link.href : "";
-        var title = link && link.title ? link.title : "";
+      // listItems.forEach(function(item) {
+      //   var link = item.querySelector("a");
+      //   var url = link && link.href ? link.href : "";
+      //   var title = link && link.title ? link.title : "";
 
-        resources.push({ resource: title, link: url });
-      });
+      //   resources.push({ resource: title, link: url });
+      // });
 
-      [projectName, files, learningObjectives, resources];
+      [projectName, tasks, learningObjectives, resources];
     `
   }, function(results) {
     var projectName = results[0][0];
-    var files = results[0][1];
+    var tasks = results[0][1];
     var learningObjectives = results[0][2];
     var resources = results[0][3];
 
@@ -88,8 +106,21 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 	copiedText += "## Tasks\n\n";
     copiedText += "| Task | File |\n";
     copiedText += "| ---- | ---- |\n";
-    files.forEach(function(pair) {
-      copiedText += "| " + pair.task + " | [" + pair.file.substring(6) + "](./"+ pair.file.substring(6) +") |\n";
+    tasks.forEach(function(task) {
+      
+      let string_files = "";
+      if (task.files != null)
+      {
+        task.files.forEach((file)=>{
+          string_files+= `[${file}](./${file}), `;
+        })
+        string_files = string_files.slice(0,-2)
+      }
+      else
+      {
+        string_files = "[SOON](./)"
+      }
+      copiedText += "| " + task.title + " | "+ string_files +" |\n";
     });
 
     saveToFile(copiedText);
