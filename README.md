@@ -22,6 +22,9 @@ The README Maker Extension is a Chrome extension that automates the process of c
 4. Click on "Load unpacked" and select the cloned repository folder.
 
 ## Usage
+#### youtube [video](https://www.youtube.com/watch?v=HEsgoJOjG5Y&ab_channel=nuuX) by [Mounssif](https://github.com/nuuxcode)
+
+### OR
 
 1. Open the ALX project page in Chrome at `https://intranet.alxswe.com/projects/`.
 2. Click on the ALX README Maker extension icon in the toolbar.
