@@ -7,22 +7,6 @@ chrome.browserAction.onClicked.addListener(function(tab) {
       var files = [];
       var learningObjectives = [];
       var resources = [];
-
-      // var mandatoryElements = document.querySelectorAll('span.label.label-info');
-      // mandatoryElements.forEach(function(element) {
-      //   if (element.textContent.trim() === 'mandatory') {
-      //     var taskElement = element.closest('.panel-heading.panel-heading-actions').querySelector('h3.panel-title');
-      //     tasks.push(taskElement.textContent.trim());
-      //   }
-      // });
-
-      // var advancedElements = document.querySelectorAll('span.label.label-info');
-      // advancedElements.forEach(function(element) {
-      //   if (element.textContent.trim() === '#advanced') {
-      //     var taskElement = element.closest('.panel-heading.panel-heading-actions').querySelector('h3.panel-title');
-      //     tasks.push(taskElement.textContent.trim());
-      //   }
-      // });
       
       const taskElements = document.querySelectorAll('div[id^="task-num"]')
       taskElements.forEach(taskDiv => {
@@ -31,56 +15,40 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
         const files = taskDiv.querySelector('div.list-group-item ul li:nth-child(3) code')?.outerText;
         files_array = files?.split(", ");
-        //TODO split file
-        
-        
         tasks.push({
           title: title,
           task_type: task_type,
           files: files_array
         });
-        console.log(tasks);
       });
 
-      // var fileElements = document.querySelectorAll('.list-group-item ul li:nth-child(3)');
-      // fileElements.forEach(function(element, index) {
-      //   var file = element.textContent.trim();
-      //   if (index < tasks.length) {
-      //     var task = tasks[index];
-      //     files.push({ task: task, file: file });
-      //   } else {
-      //     files.push({ task: '', file: file });
-      //   }
-      // });
+      var h2Elements = document.querySelectorAll('h2');
 
-      var learningObjectiveElements = document.querySelectorAll('h3');
-      var generalHeadingIndex = -1;
-      learningObjectiveElements.forEach(function(element, index) {
-        if (element.textContent.trim() === 'General' && generalHeadingIndex === -1) {
-          generalHeadingIndex = index;
-        }
-      });
-
-      if (generalHeadingIndex !== -1) {
-        var objectives = [];
-        var listElements = learningObjectiveElements[generalHeadingIndex].nextElementSibling.querySelectorAll('li');
-        listElements.forEach(function(liElement) {
-          objectives.push(liElement.textContent.trim());
-        });
-        learningObjectives.push({ category: 'General', objectives: objectives });
+      for (var i = 0; i < h2Elements.length; i++) {
+          if (h2Elements[i].textContent.includes("Learning Objectives")) {
+            var general = h2Elements[i].nextElementSibling.nextElementSibling.nextElementSibling;
+            general.querySelectorAll("li").forEach(li =>{
+              learningObjectives.push(li.innerHTML);
+            });
+            break;
+          }
       }
 
-      // var panelBody = document.querySelector(".panel-body");
-      // var sectionList = panelBody.querySelector("ul");
-      // var listItems = sectionList.querySelectorAll("li");
+      var h2Elements = document.querySelectorAll('h2');
 
-      // listItems.forEach(function(item) {
-      //   var link = item.querySelector("a");
-      //   var url = link && link.href ? link.href : "";
-      //   var title = link && link.title ? link.title : "";
+      for (var i = 0; i < h2Elements.length; i++) {
+          if (h2Elements[i].textContent.includes("Resources")) {
+            var general = h2Elements[i].nextElementSibling.nextElementSibling;
+            general.querySelectorAll("li").forEach(li =>{
+                var link = li.querySelector("a");
+                var url = link && link.href ? link.href : "";
+                var title = link && link.title ? link.title : li.textContent;
 
-      //   resources.push({ resource: title, link: url });
-      // });
+                resources.push({ resource: title, link: url });
+            });
+            break;
+          }
+      }
 
       [projectName, tasks, learningObjectives, resources];
     `
@@ -90,39 +58,43 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     var learningObjectives = results[0][2];
     var resources = results[0][3];
 
-    var copiedText = "# " + projectName + "\n\n";
-    copiedText += "## Resources\n\n";
-    copiedText += "#### Read or watch:\n\n";
-    resources.forEach(function(obj){
-      copiedText += "* [" + obj.resource + "](" + obj.link + ")\n";
-    });
-    copiedText += "## Learning Objectives\n\n";
-    learningObjectives.forEach(function(obj) {
-      copiedText += "### " + obj.category + "\n\n";
-      obj.objectives.forEach(function(objective) {
-        copiedText += "* " + objective + "\n";
+    var copiedText = `# ${projectName}\n\n`;
+
+    if (resources.length !== 0) {
+      copiedText += "## Resources\n\n";
+      copiedText += "#### Read or watch:\n\n";
+      resources.forEach(function(obj){
+        copiedText += `* [${obj.resource}](${obj.link})\n`;
       });
-    });
-	copiedText += "## Tasks\n\n";
+    }
+
+    if (learningObjectives.length !== 0) {
+      copiedText += "## Learning Objectives\n\n";
+      copiedText += "### General\n\n";
+      learningObjectives.forEach(function(obj) {
+        copiedText += "* " + obj + "\n";
+      });
+    }
+
+	  copiedText += "## Tasks\n\n";
     copiedText += "| Task | File |\n";
     copiedText += "| ---- | ---- |\n";
+
     tasks.forEach(function(task) {
-      
       let string_files = "";
-      if (task.files != null)
-      {
+      if (task.files != null) {
         task.files.forEach((file)=>{
           string_files+= `[${file}](./${file}), `;
         })
         string_files = string_files.slice(0,-2)
       }
-      else
-      {
+      else {
         string_files = "[SOON](./)"
       }
-      copiedText += "| " + task.title + " | "+ string_files +" |\n";
+      copiedText += `| ${task.title} | ${string_files} |\n`;
     });
 
+    copyToClipboard(copiedText);
     saveToFile(copiedText);
   });
   }
@@ -135,4 +107,13 @@ function saveToFile(text) {
   downloadLink.href = URL.createObjectURL(blob);
   downloadLink.download = fileName;
   downloadLink.click();
+}
+
+function copyToClipboard(text) {
+  var textArea = document.createElement("textarea");
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand("copy");
+  document.body.removeChild(textArea);
 }
