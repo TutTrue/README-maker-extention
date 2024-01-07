@@ -1,119 +1,118 @@
-chrome.browserAction.onClicked.addListener(function(tab) {
-  if (tab.url.startsWith('https://intranet.alxswe.com/projects/')){
-  chrome.tabs.executeScript(tab.id, {
-    code: `
-      var projectName = document.title.split(" | ")[0];
-      var tasks = [];
-      var files = [];
-      var learningObjectives = [];
-      var resources = [];
-      
-      const taskElements = document.querySelectorAll('div[id^="task-num"]')
-      taskElements.forEach(taskDiv => {
-        const title = taskDiv.querySelector('h3.panel-title')?.outerText;
-        const task_type = taskDiv.querySelector('span.label.label-info')?.outerText;
+chrome.browserAction.onClicked.addListener((tab) => {
+    if (tab.url.startsWith('https://intranet.alxswe.com/projects/')) {
+        chrome.tabs.executeScript(tab.id, {code: `(${extractProjectDetails})()`}, results => {
+            const projectName = results[0][0];
+            const tasks = results[0][1]
+            const learningObjectives = results[0][2];
+            const resources = results[0][3];
+            let readmeContent = `# ${projectName}\n\n`
 
-        const files = taskDiv.querySelector('div.list-group-item ul li:nth-child(3) code')?.outerText;
-        files_array = files?.split(", ");
-        tasks.push({
-          title: title,
-          task_type: task_type,
-          files: files_array
+            if (resources) {
+                readmeContent += "## Resources\n\n";
+                readmeContent += "#### Read or watch:\n\n";
+                resources.forEach((obj) => {
+                    readmeContent += `* [${obj.resource}](${obj.link})\n`;
+                });
+            }
+
+            if (learningObjectives) {
+                readmeContent += "## Learning Objectives\n\n"
+                readmeContent += "### General\n\n";
+                learningObjectives.forEach(function (obj) {
+                    readmeContent += "* " + obj + "\n";
+                });
+            }
+
+            if (tasks) {
+                readmeContent += "## Tasks\n\n";
+                readmeContent += "| Task | File | Mode |\n";
+                readmeContent += "| ---- | ---- | ---- |\n";
+
+                tasks.forEach(function (task) {
+                    let string_files = "";
+                    if (task.taskFileName) {
+                        const fileName = task.taskFileName.split(', ')
+                        fileName.forEach((file) => {
+                            string_files += `[${file}](./${file}), `;
+                        })
+                        string_files = string_files.slice(0, -2)
+                    } else {
+                        string_files = "[SOON](./)"
+                    }
+                    readmeContent += `| ${task.taskTitle} | ${string_files} | ${task.taskMode} |\n`;
+                });
+            }
+            copyToClipboard(readmeContent);
+            saveToFile(readmeContent);
         });
-      });
-
-      var h2Elements = document.querySelectorAll('h2');
-
-      for (var i = 0; i < h2Elements.length; i++) {
-          if (h2Elements[i].textContent.includes("Learning Objectives")) {
-            var general = h2Elements[i].nextElementSibling.nextElementSibling.nextElementSibling;
-            general.querySelectorAll("li").forEach(li =>{
-              learningObjectives.push(li.innerHTML);
-            });
-            break;
-          }
-      }
-
-      var h2Elements = document.querySelectorAll('h2');
-
-      for (var i = 0; i < h2Elements.length; i++) {
-          if (h2Elements[i].textContent.includes("Resources")) {
-            var general = h2Elements[i].nextElementSibling.nextElementSibling;
-            general.querySelectorAll("li").forEach(li =>{
-                var link = li.querySelector("a");
-                var url = link && link.href ? link.href : "";
-                var title = link && link.title ? link.title : li.textContent;
-
-                resources.push({ resource: title, link: url });
-            });
-            break;
-          }
-      }
-
-      [projectName, tasks, learningObjectives, resources];
-    `
-  }, function(results) {
-    var projectName = results[0][0];
-    var tasks = results[0][1];
-    var learningObjectives = results[0][2];
-    var resources = results[0][3];
-
-    var copiedText = `# ${projectName}\n\n`;
-
-    if (resources.length !== 0) {
-      copiedText += "## Resources\n\n";
-      copiedText += "#### Read or watch:\n\n";
-      resources.forEach(function(obj){
-        copiedText += `* [${obj.resource}](${obj.link})\n`;
-      });
     }
-
-    if (learningObjectives.length !== 0) {
-      copiedText += "## Learning Objectives\n\n";
-      copiedText += "### General\n\n";
-      learningObjectives.forEach(function(obj) {
-        copiedText += "* " + obj + "\n";
-      });
-    }
-
-	  copiedText += "## Tasks\n\n";
-    copiedText += "| Task | File |\n";
-    copiedText += "| ---- | ---- |\n";
-
-    tasks.forEach(function(task) {
-      let string_files = "";
-      if (task.files != null) {
-        task.files.forEach((file)=>{
-          string_files+= `[${file}](./${file}), `;
-        })
-        string_files = string_files.slice(0,-2)
-      }
-      else {
-        string_files = "[SOON](./)"
-      }
-      copiedText += `| ${task.title} | ${string_files} |\n`;
-    });
-
-    copyToClipboard(copiedText);
-    saveToFile(copiedText);
-  });
-  }
 });
 
+function extractProjectDetails() {
+    const headers = document.querySelectorAll('h2');
+
+    function getProjectName() {
+        return document.title.split(": ")[1].split(" |")[0];
+    }
+
+    function getTasks() {
+        const tasks = [];
+        const tasksCards = document.querySelectorAll('div[id^="task-num"]')
+
+        tasksCards.forEach(taskCard => {
+            const taskTitle = taskCard.querySelector('h3.panel-title').outerText;
+            const taskMode = taskCard.querySelector('span.label.label-info').outerText;
+            const taskFileName = taskCard.querySelector('div.list-group-item ul li:nth-child(2) code').outerText;
+
+            tasks.push({
+                taskTitle: taskTitle,
+                taskMode: taskMode,
+                taskFileName: taskFileName
+            });
+        });
+
+        return tasks;
+    }
+
+    function getLearningObjectives() {
+        const objectivesSection = Array.from(headers).find(header => header.textContent.includes('Learning Objectives'));
+        const objectivesList = objectivesSection.nextElementSibling.nextElementSibling.nextElementSibling.querySelectorAll('li');
+        return Array.from(objectivesList).map(li => li.innerHTML);
+    }
+
+    function getResources() {
+        const resourcesSection = Array.from(headers).find(header => header.textContent.includes('Resources'));
+        const resourcesList = resourcesSection.nextElementSibling.nextElementSibling.querySelectorAll('li');
+        return Array.from(resourcesList).map(li => {
+            const link = li.querySelector("a");
+            const href = link && link.href ? link.href : "";
+            const title = link && link.title ? link.title : li.textContent;
+            return {resource: title, link: href};
+        });
+    }
+
+    const projectName = getProjectName();
+    const tasks = getTasks();
+    const learningObjectives = getLearningObjectives();
+    const resources = getResources();
+
+    return [projectName, tasks, learningObjectives, resources]
+}
+
 function saveToFile(text) {
-  var blob = new Blob([text], { type: 'text/plain' });
-  var fileName = 'README.md';
-  var downloadLink = document.createElement('a');
-  downloadLink.href = URL.createObjectURL(blob);
-  downloadLink.download = fileName;
-  downloadLink.click();
+    const blob = new Blob([text], {type: 'text/plain'});
+    const fileName = 'README.md';
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = fileName;
+    downloadLink.click();
 }
 
 function copyToClipboard(text) {
-  var textArea = document.createElement("textarea");
-  textArea.value = text;
-  document.body.appendChild(textArea);
-  textArea.select();
-  document.execCommand("copy");
-  document.body.removeChild(textArea);
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
 }
