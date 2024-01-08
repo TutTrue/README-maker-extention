@@ -96,8 +96,6 @@ function extractProjectDetails() {
     const learningObjectives = getLearningObjectives();
     const resources = getResources();
 
-    console.log(tasks)
-
     return [projectName, tasks, learningObjectives, resources]
 }
 
