@@ -33,11 +33,11 @@ chrome.browserAction.onClicked.addListener((tab) => {
                     if (task.taskFileName) {
                         const fileName = task.taskFileName.split(', ')
                         fileName.forEach((file) => {
-                            string_files += `[${file}](./${file}), `;
+                            string_files += `[${file}](${file}), `;
                         })
                         string_files = string_files.slice(0, -2)
                     } else {
-                        string_files = "[SOON](./)"
+                        string_files = "[SOON]()"
                     }
                     readmeContent += `| ${task.taskTitle} | ${string_files} | ${task.taskMode} |\n`;
                 });
@@ -62,7 +62,7 @@ function extractProjectDetails() {
         tasksCards.forEach(taskCard => {
             const taskTitle = taskCard.querySelector('h3.panel-title').outerText;
             const taskMode = taskCard.querySelector('span.label.label-info').outerText;
-            const taskFileName = taskCard.querySelector('div.list-group-item ul li:nth-child(2) code').outerText;
+            const taskFileName = taskCard.querySelector('div.list-group-item ul li:last-child code').outerText;
 
             tasks.push({
                 taskTitle: taskTitle,
@@ -95,6 +95,8 @@ function extractProjectDetails() {
     const tasks = getTasks();
     const learningObjectives = getLearningObjectives();
     const resources = getResources();
+
+    console.log(tasks)
 
     return [projectName, tasks, learningObjectives, resources]
 }
