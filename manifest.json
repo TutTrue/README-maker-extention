@@ -1,24 +1,23 @@
 {
-  "manifest_version": 2,
-  "name": "ALX README maker",
-  "version": "1.1",
-  "description": "make README.md file for alx projects",
-  "permissions": ["activeTab"],
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": false
-  },
-  "browser_action": {
-    "default_title": "ALX README maker",
-    "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
-    }
-  },
-  "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
-  }
+		"manifest_version": 3,
+		"name": "ALX README maker",
+		"version": "2.1",
+		"description": "make README file for alx projects",
+		"permissions": [
+				"activeTab",
+				"scripting"
+		],
+		"background": {
+				"service_worker": "background.js"
+		},
+		"action": {},
+		"icons": {
+				"16": "icon16.png",
+				"32": "icon32.png",
+				"48": "icon48.png",
+				"128": "icon128.png"
+		},
+		"host_permissions": [
+				"https://intranet.alxswe.com/projects/*"
+		]
 }
