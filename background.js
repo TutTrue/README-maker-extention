@@ -10,18 +10,7 @@ document
     changeButtonTextTemporarily("downloadButton", "Downloaded!");
   });
 
-function handleAction(actionCallback) {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    const tab = tabs[0];
-    if (!tab.url.startsWith("https://intranet.alxswe.com/projects/")) {
-      showPopup("This is not an ALX project page! 🐞");
-      return;
-    }
-    try {
-      chrome.tabs.executeScript(
-        tab.id,
-        {
-          code: `
+const CODE = `
             var projectName = document.title.split(" | ")[0];
             var tasks = [];
             var learningObjectives = [];
@@ -52,7 +41,20 @@ function handleAction(actionCallback) {
             });
   
             [projectName, tasks, learningObjectives, resources];
-          `,
+          `;
+
+function handleAction(actionCallback) {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    const tab = tabs[0];
+    if (!tab.url.startsWith("https://intranet.alxswe.com/projects/")) {
+      showPopup("This is not an ALX project page! 🐞");
+      return;
+    }
+    try {
+      chrome.tabs.executeScript(
+        tab.id,
+        {
+          code: CODE,
         },
         function (results) {
           var projectName = results[0][0];
